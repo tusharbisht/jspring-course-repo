@@ -1,0 +1,14 @@
+{
+  "_comment": "MODULE 4 — YOUR HOOKS GO HERE. Replace this with your real settings.json.",
+  "hooks": {
+    "PreToolUse": [
+      { "_hint": "Block Edit tool when path matches application-prod.properties. Exit 2 to block." }
+    ],
+    "PostToolUse": [
+      { "_hint": "After Edit on .java files, run `./mvnw spotless:apply`. Exit 0." }
+    ],
+    "Stop": [
+      { "_hint": "Before exit, run `./mvnw -pl <affected-module> test` to catch regressions." }
+    ]
+  }
+}

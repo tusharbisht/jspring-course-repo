@@ -1,7 +1,8 @@
-# Module 3 — Slash Commands + Custom Subagents for Java
+# Module 4 — Hooks for Spring Boot Gotchas
 
-Two exercises:
-1. Author `.claude/commands/controller-review.md` — a reusable prompt that audits any controller class for missing @Valid / unhandled exceptions / manual auth / N+1 risks.
-2. Author `.claude/agents/mockito-test-writer.md` — a scoped subagent with YAML frontmatter + a tool allowlist that writes Mockito 5 / JUnit 5 tests for any service class.
+Wire the three hooks in `.claude/settings.json`:
+- **PreToolUse**: block any Edit to `application-prod.properties` (exit 2 + message)
+- **PostToolUse**: run `./mvnw spotless:apply` after any .java edit (exit 0)
+- **Stop**: run `./mvnw test` on the affected module when Claude is about to exit
 
-Run `/controller-review UserController` and paste the output. Run your subagent against `OrderService` and paste the generated test.
+Use bash by default. Python alternative shown for cleaner JSON parsing.
