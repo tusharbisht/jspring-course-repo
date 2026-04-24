@@ -1,11 +1,7 @@
-# Module 2 — CLAUDE.md for Spring Boot Repos
+# Module 3 — Slash Commands + Custom Subagents for Java
 
-Author the project's `CLAUDE.md`. Rename `CLAUDE.md-TEMPLATE` → `CLAUDE.md` and fill every section with YOUR team's real conventions. Then retry Module 1's bug fix and watch Claude reach for `@EntityGraph` + Testcontainers — NOT H2, NOT JUnit 4.
+Two exercises:
+1. Author `.claude/commands/controller-review.md` — a reusable prompt that audits any controller class for missing @Valid / unhandled exceptions / manual auth / N+1 risks.
+2. Author `.claude/agents/mockito-test-writer.md` — a scoped subagent with YAML frontmatter + a tool allowlist that writes Mockito 5 / JUnit 5 tests for any service class.
 
-Target sections (all six required):
-- Stack (versions pinned)
-- Conventions (package / naming / imports)
-- Testing (framework + mocking + integration backbone)
-- Don't-Touch (files Claude must never edit)
-- Commands (./mvnw clean verify etc.)
-- Escalation (when to stop + ask a human)
+Run `/controller-review UserController` and paste the output. Run your subagent against `OrderService` and paste the generated test.

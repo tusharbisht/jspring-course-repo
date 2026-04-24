@@ -1,0 +1,4 @@
+# Add slash commands here. Each is a .md file whose contents are the prompt
+# Claude runs when the learner types /<filename>. Example file names:
+#   controller-review.md   → /controller-review <arg>
+#   feature-slice.md       → /feature-slice <arg>
