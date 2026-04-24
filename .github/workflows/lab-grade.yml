@@ -1,0 +1,37 @@
+name: lab-grade
+on:
+  push:
+    branches: [ 'module-6-capstone', 'capstone-*', 'submit/*', 'learner/*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  grade:
+    name: grade
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Show environment
+        run: |
+          java -version
+          mvn -v
+
+      - name: Run full verify (compile + unit + integration)
+        run: mvn -B -DskipITs=false clean verify
+
+      - name: Upload surefire reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: '**/target/surefire-reports'
