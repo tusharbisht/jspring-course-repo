@@ -1,0 +1,36 @@
+# CLAUDE.md — TEMPLATE FOR YOU TO AUTHOR
+
+This file is intentionally incomplete. Your task in Module 2 is to fill in
+each section with YOUR team's real conventions. Rename it to `CLAUDE.md`
+when done.
+
+## Stack
+<!-- e.g. Java 21, Spring Boot 3.3.5, Maven 3.9+, JUnit 5.11, Mockito 5, Testcontainers 1.20 + Postgres -->
+
+## Conventions
+<!-- package layout (com.skillslab.jspring.<domain>), naming (Service / Repository / Controller / DTO suffixes), imports (jakarta.* NOT javax.*), constructor injection only -->
+
+## Testing
+<!-- test framework: JUnit 5 — NEVER JUnit 4, NEVER javax.* test imports
+     unit tests: Mockito with @ExtendWith(MockitoExtension.class)
+     integration tests: Testcontainers + @Testcontainers + real Postgres (NOT H2)
+     coverage threshold: ≥ 75% branch coverage via jacoco -->
+
+## Don't-Touch
+<!-- Files Claude must never edit:
+     - application-prod.properties
+     - src/main/resources/db/migration/*.sql (use a new V<N+1>__description.sql instead)
+     - pom.xml major version bumps without explicit approval -->
+
+## Commands
+<!-- Full test suite:   ./mvnw clean verify
+     Just unit tests:   ./mvnw test
+     Integration only:  ./mvnw verify -Pintegration
+     Run locally:       ./mvnw spring-boot:run -->
+
+## Escalation
+<!-- When should Claude STOP and ask a human?
+     - Schema changes (new migration file, altered column type)
+     - Any edit touching security config or JWT code
+     - Anything in application-prod.properties
+     - Removing a test without replacing it -->

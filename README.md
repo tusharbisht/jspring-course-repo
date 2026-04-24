@@ -1,16 +1,11 @@
-# Module 1 — Feel the Pain: Claude Code on Your Repo with No Context
+# Module 2 — CLAUDE.md for Spring Boot Repos
 
-You're working in `OrderService.getRecentOrders()`. Your team uses this method on the customer dashboard. It just got flagged for slow response times in staging — every call triggers ~21 database queries for 20 orders.
+Author the project's `CLAUDE.md`. Rename `CLAUDE.md-TEMPLATE` → `CLAUDE.md` and fill every section with YOUR team's real conventions. Then retry Module 1's bug fix and watch Claude reach for `@EntityGraph` + Testcontainers — NOT H2, NOT JUnit 4.
 
-**Your task** (~20 min):
-1. Ask Claude Code to find + fix the bug. Use `/help`, `/init`, whatever feels natural.
-2. **DO NOT** author `CLAUDE.md` yet — you'll do that in Module 2.
-3. Paste (a) the prompt you used, (b) the diff Claude produced, (c) any edits you had to make by hand because Claude didn't know your team's conventions.
-
-What you're observing: without a CLAUDE.md, Claude will guess at your test framework, your namespace conventions (javax.* vs jakarta.*), your transaction boundaries, etc. Whatever it guesses WRONG is what you'll add to CLAUDE.md in the next module.
-
-## Starting the sim
-```
-./mvnw clean verify     # confirm tests pass before you start
-claude                  # fire up Claude Code
-```
+Target sections (all six required):
+- Stack (versions pinned)
+- Conventions (package / naming / imports)
+- Testing (framework + mocking + integration backbone)
+- Don't-Touch (files Claude must never edit)
+- Commands (./mvnw clean verify etc.)
+- Escalation (when to stop + ask a human)
