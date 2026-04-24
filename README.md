@@ -1,19 +1,16 @@
-# Claude Code for Spring Boot — Course Repo
+# Module 1 — Feel the Pain: Claude Code on Your Repo with No Context
 
-Pick the module branch for the step you're on:
+You're working in `OrderService.getRecentOrders()`. Your team uses this method on the customer dashboard. It just got flagged for slow response times in staging — every call triggers ~21 database queries for 20 orders.
 
-- `module-0-preflight` — Run `java -version` + `mvn -v`, paste outputs
-- `module-1-starter` — OrderService with planted N+1 bug (no CLAUDE.md yet)
-- `module-2-claudemd` — Same bug; you author `CLAUDE.md` for this repo
-- `module-3-agents` — `.claude/commands/` + `.claude/agents/` stubs
-- `module-4-hooks` — `.claude/settings.json` with three hook stubs
-- `module-5-mcp` — ready for `claude mcp add --transport stdio team-tickets`
-- `module-6-capstone` — POST /orders scaffolding + GHA `lab-grade.yml`
+**Your task** (~20 min):
+1. Ask Claude Code to find + fix the bug. Use `/help`, `/init`, whatever feels natural.
+2. **DO NOT** author `CLAUDE.md` yet — you'll do that in Module 2.
+3. Paste (a) the prompt you used, (b) the diff Claude produced, (c) any edits you had to make by hand because Claude didn't know your team's conventions.
 
-Each branch includes this README and the starter pom.xml. See the course for instructions.
+What you're observing: without a CLAUDE.md, Claude will guess at your test framework, your namespace conventions (javax.* vs jakarta.*), your transaction boundaries, etc. Whatever it guesses WRONG is what you'll add to CLAUDE.md in the next module.
 
-## Prerequisites
-- Java 21 (Temurin recommended)
-- Maven 3.9+
-- Claude CLI (`npm i -g @anthropic-ai/claude-code` or equivalent)
-- An Anthropic API key via `claude /login` or `ANTHROPIC_API_KEY` env var
+## Starting the sim
+```
+./mvnw clean verify     # confirm tests pass before you start
+claude                  # fire up Claude Code
+```
