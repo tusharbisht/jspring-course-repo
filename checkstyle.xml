@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<module name="Checker">
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java, properties, xml"/>
+
+    <!-- Spring Boot 3.x must use jakarta.* not javax.* -->
+    <module name="RegexpMultiline">
+        <property name="format" value="^import javax\.(servlet|persistence|validation|ws\.rs|inject|annotation|transaction)"/>
+        <property name="message" value="Use jakarta.* imports (Spring Boot 3 / Jakarta EE 9+), not javax.*"/>
+        <property name="fileExtensions" value="java"/>
+    </module>
+
+    <!-- No unused imports / no wildcard imports -->
+    <module name="TreeWalker">
+        <module name="UnusedImports"/>
+        <module name="AvoidStarImport"/>
+        <module name="UnnecessarySemicolonInEnumeration"/>
+        <module name="UnnecessarySemicolonAfterTypeMemberDeclaration"/>
+    </module>
+
+    <!-- Tab indent forbidden (project uses 4-space) -->
+    <module name="FileTabCharacter">
+        <property name="eachLine" value="true"/>
+    </module>
+
+    <!-- Trailing whitespace -->
+    <module name="RegexpSingleline">
+        <property name="format" value="\s+$"/>
+        <property name="message" value="Trailing whitespace"/>
+    </module>
+</module>
