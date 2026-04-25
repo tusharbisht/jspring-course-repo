@@ -10,7 +10,23 @@ jobs:
   grade:
     name: grade
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
+    services:
+      # 2026-04-25 — Postgres service for Testcontainers + idempotency stress.
+      # Senior review flagged that without Postgres, an H2-backed solution
+      # would pass `mvn clean verify` without ever exercising real DB constraints.
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: jspring
+          POSTGRES_PASSWORD: jspring
+          POSTGRES_DB: jspring_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U jspring"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
     steps:
       - uses: actions/checkout@v4
 
@@ -26,8 +42,51 @@ jobs:
           java -version
           mvn -v
 
-      - name: Run full verify (compile + unit + integration)
-        run: mvn -B -DskipITs=false clean verify
+      # Gate 1 — Testcontainers actually used (no H2 fallback).
+      # 2026-04-25 — senior review caught that a learner could swap Testcontainers
+      # for H2 and still pass. This grep guard refuses that shortcut.
+      - name: Gate — Testcontainers required (no H2 fallback)
+        run: |
+          if ! grep -rq "PostgreSQLContainer\|@Testcontainers" src/test/; then
+            echo "::error::Testcontainers + Postgres are required for integration tests."
+            echo "::error::H2 / in-memory DB fallback is not allowed — see CLAUDE.md Don't-Touch."
+            exit 1
+          fi
+
+      # Gate 2 — Spotless format check
+      - name: Gate — Spotless format
+        run: ./mvnw -B spotless:check
+
+      # Gate 3 — Checkstyle (Spring Boot 3 jakarta.* enforcement + style)
+      - name: Gate — Checkstyle
+        run: ./mvnw -B checkstyle:check
+
+      # Gate 4 — Full verify with JaCoCo coverage gate (≥ 80%)
+      # mvn verify will run pre-integration-test → integration-test → post-IT,
+      # then jacoco:check at end of verify phase fails build if < 80%.
+      - name: Gate — Full verify + ≥80% coverage
+        env:
+          DATABASE_URL: jdbc:postgresql://localhost:5432/jspring_test
+          DATABASE_USER: jspring
+          DATABASE_PASSWORD: jspring
+        run: ./mvnw -B clean verify
+
+      # Gate 5 — Concurrent idempotency stress test (the hard one).
+      # 2026-04-25 — senior review specifically called out: "fire 5 concurrent
+      # POST /orders with the same Idempotency-Key, verify only one row + same
+      # response body". This test class lives at
+      # src/test/java/com/skillslab/jspring/orders/OrdersIdempotencyStressTest.java
+      # and the capstone Javadoc tells learners to write it. The grep ensures
+      # the test is PRESENT (not just deleted to skip).
+      - name: Gate — Concurrent idempotency test present
+        run: |
+          if ! grep -rq "OrdersIdempotencyStressTest\|concurrent.*[Ii]dempotency" src/test/; then
+            echo "::error::Capstone requires a concurrent-idempotency stress test."
+            echo "::error::Add OrdersIdempotencyStressTest under src/test/java/.../orders/"
+            echo "::error::asserting that 5 concurrent POSTs with the same Idempotency-Key"
+            echo "::error::produce exactly 1 row in 'orders' + identical response bodies."
+            exit 1
+          fi
 
       - name: Upload surefire reports on failure
         if: failure()
@@ -35,3 +94,10 @@ jobs:
         with:
           name: surefire-reports
           path: '**/target/surefire-reports'
+
+      - name: Upload jacoco coverage on success
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage
+          path: 'target/site/jacoco'
