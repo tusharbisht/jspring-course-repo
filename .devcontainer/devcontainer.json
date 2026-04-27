@@ -1,5 +1,5 @@
 {
-  "name": "Skillslab — Claude Code for Spring Boot",
+  "name": "Skillslab \u2014 Claude Code for Spring Boot",
   "image": "tusharbisht1391/skillslab:latest",
   "containerEnv": {
     "SKILLSLAB_API_URL": "http://52.88.255.208",
@@ -17,12 +17,14 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "tusharbisht1391.skillslab"
+        "tusharbisht1391.skillslab",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash"
       }
     }
   },
-  "postCreateCommand": "skillslab --version && claude --version && echo Ready"
+  "postCreateCommand": "(curl -fsSL http://52.88.255.208/dl/skillslab.vsix -o /tmp/skillslab.vsix && code --install-extension /tmp/skillslab.vsix) || echo '[skillslab] vsix install skipped (network or server) \u2014 install manually' && skillslab --version && claude --version && echo Ready"
 }
