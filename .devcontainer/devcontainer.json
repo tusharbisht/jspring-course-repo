@@ -26,5 +26,10 @@
       }
     }
   },
-  "postCreateCommand": "(curl -fsSL http://52.88.255.208/dl/skillslab.vsix -o /tmp/skillslab.vsix && code --install-extension /tmp/skillslab.vsix) || echo '[skillslab] vsix install skipped (network or server) \u2014 install manually' && skillslab --version && claude --version && echo Ready"
+  "postCreateCommand": "skillslab --version && claude --version && echo Ready",
+  "postAttachCommand": [
+    "bash",
+    "-c",
+    "CODE=$(command -v code 2>/dev/null || ls /vscode/bin/*/bin/remote-cli/code 2>/dev/null | head -1 || ls /home/*/.vscode-server/bin/*/bin/remote-cli/code 2>/dev/null | head -1 || ls /root/.vscode-server/bin/*/bin/remote-cli/code 2>/dev/null | head -1); if [ -z \"$CODE\" ]; then   echo \"[skillslab] code CLI not found (PATH or known dev-container locations); install manually: download http://52.88.255.208/dl/skillslab.vsix and run code --install-extension\";   exit 0; fi; if \"$CODE\" --list-extensions 2>/dev/null | grep -qx tusharbisht1391.skillslab; then   echo \"[skillslab] extension already installed\";   exit 0; fi; echo \"[skillslab] downloading + installing extension...\"; curl -fsSL http://52.88.255.208/dl/skillslab.vsix -o /tmp/skillslab.vsix && \"$CODE\" --install-extension /tmp/skillslab.vsix || echo \"[skillslab] install failed (network or download issue); install manually\""
+  ]
 }
