@@ -1,0 +1,111 @@
+name: grade
+
+# Per CLAUDE.md §"BEHAVIORAL TEST HARNESS" + buddy-Opus 2026-04-28:
+# GHA workflow attestation is the SOURCE OF TRUTH for hands_on completion.
+# Runs on every push to exercise/* branch; posts the result to the LMS so
+# the learner's progress reflects the OFFICIAL grader's verdict, not just
+# their local skillslab CLI run.
+#
+# CI invariant (per CLAUDE.md): on each starter branch, this workflow
+# MUST report FAIL (proves the planted bug is detected). On future
+# solution branches, it MUST report PASS. Drift = course-content bug.
+
+on:
+  push:
+    branches:
+      - 'exercise/**'
+  pull_request:
+    branches:
+      - 'exercise/**'
+  workflow_dispatch:  # manual run from the Actions UI
+
+permissions:
+  contents: read
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-mvn-${{ hashFiles('**/pom.xml') }}
+
+      - name: Determine exercise dir from branch
+        id: exercise
+        run: |
+          set -euo pipefail
+          # Branch shape: exercise/NN-<slug>  →  dir: exercise-NN-<slug>
+          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+          REST="${BRANCH#exercise/}"
+          NN="${REST%%-*}"
+          SLUG="${REST#${NN}-}"
+          DIR="exercise-${REST}"
+          echo "branch=${BRANCH}"     | tee -a "$GITHUB_OUTPUT"
+          echo "nn=${NN}"             | tee -a "$GITHUB_OUTPUT"
+          echo "slug=${SLUG}"         | tee -a "$GITHUB_OUTPUT"
+          echo "dir=${DIR}"           | tee -a "$GITHUB_OUTPUT"
+          # Course slug from manifest (top-level "course" field)
+          COURSE=$(jq -r '.course' .grading/manifest.json)
+          echo "course=${COURSE}"     | tee -a "$GITHUB_OUTPUT"
+
+      - name: Run grader
+        id: grade
+        run: |
+          chmod +x .grading/run-grading.sh
+          chmod +x .grading/scripts/*.sh
+          # Run grader. Don't fail the step on a FAIL exit — we want to POST
+          # the result regardless. The "Fail workflow if grader failed" step
+          # at the end fails the run for visibility.
+          set +e
+          bash .grading/run-grading.sh "${{ steps.exercise.outputs.dir }}"
+          RC=$?
+          set -e
+          echo "runner_exit=${RC}" | tee -a "$GITHUB_OUTPUT"
+          if [ -f grading-result.json ]; then
+            echo "--- grading-result.json ---"
+            cat grading-result.json
+          fi
+
+      - name: Post to LMS
+        if: ${{ hashFiles('grading-result.json') != '' }}
+        env:
+          LMS_BASE: ${{ vars.LMS_BASE || 'http://52.88.255.208' }}
+        run: |
+          set -euo pipefail
+          # Augment the runner's grading-result.json with GHA-side metadata
+          # (source, git_sha, run id) before POSTing.
+          jq \
+            --arg src "gha" \
+            --arg sha "${{ github.sha }}" \
+            --arg run "${{ github.run_id }}" \
+            --arg actor "${{ github.actor }}" \
+            '. + {source: $src, git_sha: $sha, github_run_id: $run, github_actor: $actor}' \
+            grading-result.json > /tmp/payload.json
+          echo "POST ${LMS_BASE}/api/courses/${{ steps.exercise.outputs.course }}/exercises/${{ steps.exercise.outputs.nn }}/${{ steps.exercise.outputs.slug }}/submit"
+          curl -fsSL --max-time 30 \
+            -X POST "${LMS_BASE}/api/courses/${{ steps.exercise.outputs.course }}/exercises/${{ steps.exercise.outputs.nn }}/${{ steps.exercise.outputs.slug }}/submit" \
+            -H 'Content-Type: application/json' \
+            --data @/tmp/payload.json | jq .
+
+      - name: Fail workflow if grader failed
+        if: ${{ steps.grade.outputs.runner_exit != '0' }}
+        run: |
+          echo "::error::Grader reported FAIL (runner exit=${{ steps.grade.outputs.runner_exit }}) — see grading-result.json above"
+          # CI invariant per CLAUDE.md: starter branches MUST FAIL the
+          # grader (proves the planted bug is detected). The "Run grader"
+          # step's FAIL is GOOD on a starter — but we still surface the
+          # failure here so the actions-list shows red on starters and
+          # green on solutions, making the invariant immediately visible.
+          exit 1
